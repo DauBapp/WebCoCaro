@@ -1,0 +1,160 @@
+@{
+    ViewData["Title"] = "Test SignalR";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Test SignalR Connection</h4>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="roomId" class="form-label">Room ID:</label>
+                        <input type="text" class="form-control" id="roomId" value="TEST123" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="playerName" class="form-label">Player Name:</label>
+                        <input type="text" class="form-control" id="playerName" value="TestPlayer" />
+                    </div>
+                    <div class="mb-3">
+                        <button class="btn btn-primary" onclick="testConnection()">Test Connection</button>
+                        <button class="btn btn-success" onclick="joinRoom()">Join Room</button>
+                        <button class="btn btn-warning" onclick="startGame()">Start Game</button>
+                        <button class="btn btn-info" onclick="makeMove()">Make Move</button>
+                    </div>
+                    <div class="mb-3">
+                        <h5>Connection Status:</h5>
+                        <div id="connectionStatus" class="alert alert-info">Not connected</div>
+                    </div>
+                    <div class="mb-3">
+                        <h5>Log:</h5>
+                        <div id="log" style="height: 300px; overflow-y: auto; background: #f8f9fa; padding: 10px; border: 1px solid #dee2e6;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/signalr.min.js"></script>
+<script>
+    let connection;
+    let roomId = 'TEST123';
+    let playerName = 'TestPlayer';
+
+    function log(message) {
+        const logDiv = document.getElementById('log');
+        const timestamp = new Date().toLocaleTimeString();
+        logDiv.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+        logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    function updateConnectionStatus(status, className) {
+        const statusDiv = document.getElementById('connectionStatus');
+        statusDiv.textContent = status;
+        statusDiv.className = `alert alert-${className}`;
+    }
+
+    async function testConnection() {
+        try {
+            log("Testing SignalR connection...");
+            
+            if (typeof signalR === 'undefined') {
+                throw new Error('SignalR library not loaded!');
+            }
+            
+            log("SignalR library loaded successfully");
+            
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl("/gameHub")
+                .build();
+
+            log("HubConnection created");
+
+            // Setup basic event handlers
+            connection.on("RoomJoined", (roomId, roomName, players, gameState) => {
+                log(`RoomJoined: ${roomId}, ${roomName}, Players: ${players.length}`);
+            });
+
+            connection.on("PlayerJoined", (playerName, symbol, playerCount) => {
+                log(`PlayerJoined: ${playerName}, ${symbol}, Count: ${playerCount}`);
+            });
+
+            connection.on("GameStarted", (gameState) => {
+                log(`GameStarted: ${JSON.stringify(gameState)}`);
+            });
+
+            connection.on("MoveMade", (row, col, symbol, gameState) => {
+                log(`MoveMade: ${row}, ${col}, ${symbol}`);
+            });
+
+            connection.on("Error", (message) => {
+                log(`Error: ${message}`);
+            });
+
+            // Start connection
+            await connection.start();
+            log("SignalR Connected successfully");
+            updateConnectionStatus('Connected', 'success');
+
+        } catch (error) {
+            log(`Connection error: ${error.message}`);
+            updateConnectionStatus(`Error: ${error.message}`, 'danger');
+        }
+    }
+
+    async function joinRoom() {
+        if (!connection || connection.state !== 'Connected') {
+            log("Not connected to SignalR");
+            return;
+        }
+
+        try {
+            roomId = document.getElementById('roomId').value;
+            playerName = document.getElementById('playerName').value;
+            
+            log(`Joining room: ${roomId} as ${playerName}`);
+            await connection.invoke("JoinRoom", roomId, playerName);
+            log("JoinRoom invoked successfully");
+        } catch (error) {
+            log(`JoinRoom error: ${error.message}`);
+        }
+    }
+
+    async function startGame() {
+        if (!connection || connection.state !== 'Connected') {
+            log("Not connected to SignalR");
+            return;
+        }
+
+        try {
+            log("Starting game...");
+            await connection.invoke("StartGame", roomId);
+            log("StartGame invoked successfully");
+        } catch (error) {
+            log(`StartGame error: ${error.message}`);
+        }
+    }
+
+    async function makeMove() {
+        if (!connection || connection.state !== 'Connected') {
+            log("Not connected to SignalR");
+            return;
+        }
+
+        try {
+            log("Making move at (5, 5)...");
+            await connection.invoke("MakeMove", roomId, 5, 5);
+            log("MakeMove invoked successfully");
+        } catch (error) {
+            log(`MakeMove error: ${error.message}`);
+        }
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        log("Page loaded, ready to test SignalR");
+    });
+</script>

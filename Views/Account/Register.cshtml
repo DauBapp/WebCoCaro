@@ -1,0 +1,35 @@
+﻿@model Web_chơi_cờ_Caro.Models.RegisterViewModel
+@{
+    ViewData["Title"] = "Đăng ký";
+}
+<h2>Đăng ký</h2>
+
+<form asp-action="Register" method="post" class="register-form shadow p-4 rounded bg-white animate__animated animate__fadeIn">
+    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+    <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Mật khẩu</label>
+        <input asp-for="Password" type="password" class="form-control" />
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Nhập lại mật khẩu</label>
+        <input asp-for="ConfirmPassword" type="password" class="form-control" />
+        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-warning w-100 fw-bold animate__animated animate__pulse">Đăng ký</button>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

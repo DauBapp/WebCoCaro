@@ -1,0 +1,199 @@
+@{
+    ViewData["Title"] = "Tạo phòng";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="text-center mb-4">
+                <h1 class="display-5 text-warning mb-3">
+                    <i class="fas fa-plus-circle me-3"></i>Tạo phòng mới
+                </h1>
+                <p class="lead text-muted">Tạo phòng và mời bạn bè tham gia</p>
+            </div>
+
+            <div class="card shadow-lg border-0" style="background: linear-gradient(135deg, #fffbe6 0%, #f5d88c 100%);">
+                <div class="card-body p-5">
+                    <form id="createRoomForm">
+                        <!-- Thông tin phòng -->
+                        <div class="mb-4">
+                            <h5 class="mb-3">
+                                <i class="fas fa-info-circle text-warning me-2"></i>Thông tin phòng
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="mb-3">
+                                        <label for="roomName" class="form-label">Tên phòng</label>
+                                        <input type="text" class="form-control" id="roomName" placeholder="Nhập tên phòng..." required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="maxPlayers" class="form-label">Số người chơi</label>
+                                        <select class="form-select" id="maxPlayers">
+                                            <option value="2" selected>2 người</option>
+                                            <option value="4">4 người</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cài đặt game -->
+                        <div class="mb-4">
+                            <h5 class="mb-3">
+                                <i class="fas fa-cog text-warning me-2"></i>Cài đặt game
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="boardSize" class="form-label">Kích thước bàn cờ</label>
+                                        <select class="form-select" id="boardSize">
+                                            <option value="15">15x15</option>
+                                            <option value="20" selected>20x20</option>
+                                            <option value="25">25x25</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="timeLimit" class="form-label">Thời gian lượt (giây)</label>
+                                        <select class="form-select" id="timeLimit">
+                                            <option value="30">30 giây</option>
+                                            <option value="60" selected>1 phút</option>
+                                            <option value="120">2 phút</option>
+                                            <option value="0">Không giới hạn</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quyền riêng tư -->
+                        <div class="mb-4">
+                            <h5 class="mb-3">
+                                <i class="fas fa-lock text-warning me-2"></i>Quyền riêng tư
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="radio" name="privacy" id="publicRoom" value="public" checked>
+                                        <label class="form-check-label" for="publicRoom">
+                                            <i class="fas fa-globe text-success me-2"></i>Phòng công khai
+                                        </label>
+                                        <small class="form-text text-muted d-block">Ai cũng có thể tham gia</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="radio" name="privacy" id="privateRoom" value="private">
+                                        <label class="form-check-label" for="privateRoom">
+                                            <i class="fas fa-lock text-warning me-2"></i>Phòng riêng tư
+                                        </label>
+                                        <small class="form-text text-muted d-block">Chỉ người có mã mới vào được</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mã phòng (hiển thị sau khi tạo) -->
+                        <div id="roomCodeSection" class="mb-4" style="display: none;">
+                            <h5 class="mb-3">
+                                <i class="fas fa-key text-warning me-2"></i>Mã phòng
+                            </h5>
+                            <div class="alert alert-success">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-grow-1">
+                                        <strong>Mã phòng:</strong> <span id="roomCode" class="badge bg-warning text-dark fs-5"></span>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-success btn-sm" onclick="copyRoomCode()">
+                                        <i class="fas fa-copy me-1"></i>Sao chép
+                                    </button>
+                                </div>
+                                <small class="text-muted">Chia sẻ mã này với bạn bè để họ tham gia</small>
+                            </div>
+                        </div>
+
+                        <!-- Nút tạo phòng -->
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-warning btn-lg px-5" id="createRoomBtn">
+                                <i class="fas fa-plus me-2"></i>Tạo phòng
+                            </button>
+                            <a href="@Url.Action("Multiplayer", "Home")" class="btn btn-outline-secondary btn-lg px-5 ms-3">
+                                <i class="fas fa-arrow-left me-2"></i>Quay lại
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('createRoomForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const roomName = document.getElementById('roomName').value;
+        const maxPlayers = document.getElementById('maxPlayers').value;
+        const boardSize = document.getElementById('boardSize').value;
+        const timeLimit = document.getElementById('timeLimit').value;
+        const privacy = document.querySelector('input[name="privacy"]:checked').value;
+        
+        // Generate room code
+        const roomCode = generateRoomCode();
+        
+        // Show room code section
+        document.getElementById('roomCode').textContent = roomCode;
+        document.getElementById('roomCodeSection').style.display = 'block';
+        
+        // Change button text
+        document.getElementById('createRoomBtn').innerHTML = '<i class="fas fa-play me-2"></i>Vào phòng';
+        document.getElementById('createRoomBtn').onclick = function() {
+            window.location.href = '@Url.Action("GameRoom", "Home")?roomId=' + roomCode;
+        };
+        
+        // Show success message
+        showAlert('Phòng đã được tạo thành công!', 'success');
+    });
+    
+    function generateRoomCode() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let result = '';
+        for (let i = 0; i < 6; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
+    }
+    
+    function copyRoomCode() {
+        const roomCode = document.getElementById('roomCode').textContent;
+        navigator.clipboard.writeText(roomCode).then(function() {
+            showAlert('Đã sao chép mã phòng!', 'success');
+        });
+    }
+    
+    function showAlert(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.setAttribute('role', 'alert');
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+
+        const form = document.getElementById('createRoomForm');
+        const actionRow = form.querySelector('.text-center');
+        if (actionRow && actionRow.parentNode === form) {
+            form.insertBefore(alertDiv, actionRow);
+        } else if (actionRow) {
+            actionRow.parentNode.insertBefore(alertDiv, actionRow);
+        } else {
+            form.prepend(alertDiv);
+        }
+        
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5000);
+    }
+</script> 

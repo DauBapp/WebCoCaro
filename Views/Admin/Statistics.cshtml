@@ -1,0 +1,331 @@
+@model Web_chơi_cờ_Caro.Models.AdminStatisticsViewModel
+@{
+    ViewData["Title"] = "Thống kê hệ thống";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-chart-bar text-primary me-2"></i>Thống kê hệ thống
+                </h1>
+                <a href="@Url.Action("Index", "Admin")" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Quay lại Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thống kê tổng quan -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Tổng người dùng
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalUsers</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Chờ duyệt
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.PendingUsers</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Bị cấm
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.BannedUsers</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-ban fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Hoạt động (7 ngày)
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.ActiveUsers</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thống kê chi tiết -->
+    <div class="row mb-4">
+        <div class="col-xl-6 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-chart-line me-2"></i>Người dùng mới theo tuần
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="weeklyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-6 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-chart-pie me-2"></i>Phân bố người dùng
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4 pb-2">
+                        <canvas id="userDistributionChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-center small">
+                        <span class="mr-2">
+                            <i class="fas fa-circle text-success"></i> Hoạt động
+                        </span>
+                        <span class="mr-2">
+                            <i class="fas fa-circle text-warning"></i> Chờ duyệt
+                        </span>
+                        <span class="mr-2">
+                            <i class="fas fa-circle text-danger"></i> Bị cấm
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thống kê theo thời gian -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-calendar me-2"></i>Thống kê theo thời gian
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <div class="h4 text-primary">@Model.NewUsersThisWeek</div>
+                                <div class="text-muted">Người dùng mới tuần này</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <div class="h4 text-success">@Model.NewUsersThisMonth</div>
+                                <div class="text-muted">Người dùng mới tháng này</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <div class="h4 text-info">@(Model.TotalUsers > 0 ? Math.Round((double)Model.ActiveUsers / Model.TotalUsers * 100, 1) : 0)%</div>
+                                <div class="text-muted">Tỷ lệ hoạt động</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bảng thống kê chi tiết -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-table me-2"></i>Thống kê chi tiết
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Chỉ số</th>
+                                    <th>Giá trị</th>
+                                    <th>Mô tả</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Tổng người dùng</strong></td>
+                                    <td><span class="badge bg-primary">@Model.TotalUsers</span></td>
+                                    <td>Số lượng tài khoản đã đăng ký</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Chờ duyệt</strong></td>
+                                    <td><span class="badge bg-warning">@Model.PendingUsers</span></td>
+                                    <td>Người dùng chưa được xác nhận email</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Bị cấm</strong></td>
+                                    <td><span class="badge bg-danger">@Model.BannedUsers</span></td>
+                                    <td>Người dùng đang bị khóa tài khoản</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Hoạt động (7 ngày)</strong></td>
+                                    <td><span class="badge bg-success">@Model.ActiveUsers</span></td>
+                                    <td>Người dùng đăng nhập trong 7 ngày qua</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Mới tuần này</strong></td>
+                                    <td><span class="badge bg-info">@Model.NewUsersThisWeek</span></td>
+                                    <td>Người dùng đăng ký trong tuần này</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Mới tháng này</strong></td>
+                                    <td><span class="badge bg-info">@Model.NewUsersThisMonth</span></td>
+                                    <td>Người dùng đăng ký trong tháng này</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .border-left-primary {
+        border-left: 0.25rem solid #4e73df !important;
+    }
+    .border-left-success {
+        border-left: 0.25rem solid #1cc88a !important;
+    }
+    .border-left-info {
+        border-left: 0.25rem solid #36b9cc !important;
+    }
+    .border-left-warning {
+        border-left: 0.25rem solid #f6c23e !important;
+    }
+    .border-left-danger {
+        border-left: 0.25rem solid #e74a3b !important;
+    }
+    .text-gray-300 {
+        color: #dddfeb !important;
+    }
+    .text-gray-800 {
+        color: #5a5c69 !important;
+    }
+    .text-xs {
+        font-size: 0.7rem;
+    }
+    .chart-area {
+        position: relative;
+        height: 20rem;
+        width: 100%;
+    }
+    .chart-pie {
+        position: relative;
+        height: 15rem;
+        width: 100%;
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Weekly Chart
+const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
+const weeklyChart = new Chart(weeklyCtx, {
+    type: 'line',
+    data: {
+        labels: [@Html.Raw(string.Join(",", Model.DailyStats.Select(s => $"'{s.Date}'")))],
+        datasets: [{
+            label: 'Người dùng mới',
+            data: [@string.Join(",", Model.DailyStats.Select(s => s.NewUsers))],
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            tension: 0.1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        }
+    }
+});
+
+// User Distribution Chart
+const distributionCtx = document.getElementById('userDistributionChart').getContext('2d');
+const distributionChart = new Chart(distributionCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Hoạt động', 'Chờ duyệt', 'Bị cấm'],
+        datasets: [{
+            data: [@(Model.TotalUsers - Model.PendingUsers - Model.BannedUsers), @Model.PendingUsers, @Model.BannedUsers],
+            backgroundColor: [
+                'rgba(28, 200, 138, 0.8)',
+                'rgba(246, 194, 62, 0.8)',
+                'rgba(231, 74, 59, 0.8)'
+            ],
+            borderColor: [
+                'rgba(28, 200, 138, 1)',
+                'rgba(246, 194, 62, 1)',
+                'rgba(231, 74, 59, 1)'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+});
+</script>

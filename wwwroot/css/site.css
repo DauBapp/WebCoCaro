@@ -1,0 +1,109 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+.caro-board td {
+    width: 35px;
+    height: 35px;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 22px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0;
+    user-select: none;
+    border: 1px solid #000 !important;
+}
+.caro-x {
+    color: #d9534f;
+    font-family: Arial, sans-serif;
+    font-size: 22px;
+    display: inline-block;
+    line-height: 35px;
+}
+.caro-o {
+    color: #0275d8;
+    font-family: Arial, sans-serif;
+    font-size: 22px;
+    display: inline-block;
+    line-height: 35px;
+}
+
+/* Đảm bảo đường kẻ bảng có màu đen */
+#caro-board {
+    border: 3px solid #000 !important;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#caro-board td {
+    border: 1px solid #000 !important;
+}
+
+#caro-board tr {
+    border: 1px solid #000 !important;
+}
+
+/* Hiệu ứng hover cho các ô */
+.caro-board td:hover {
+    background-color: #e6d7a3 !important;
+    transition: background-color 0.2s ease;
+}
+
+/* Hiệu ứng động cho form đăng ký/đăng nhập */
+.login-form, .register-form {
+  max-width: 400px;
+  margin: 40px auto;
+  background: #fffbe6;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(212,162,76,0.15);
+  animation: fadeInDown 0.7s;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-form input:focus, .register-form input:focus {
+  border-color: #d4a24c;
+  box-shadow: 0 0 0 0.2rem #ffe6a1;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.login-form button:hover, .register-form button:hover {
+  background: #e6c07b;
+  color: #fff;
+  transform: scale(1.03);
+  transition: all 0.2s;
+}
+
+.login-form button:active, .register-form button:active {
+  transform: scale(0.97);
+  transition: all 0.1s;
+}

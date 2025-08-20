@@ -1,0 +1,114 @@
+@{
+    ViewData["Title"] = "Database Management";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-database me-2"></i>
+                        Database Management
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="d-grid">
+                                <button class="btn btn-info mb-3" onclick="testConnection()">
+                                    <i class="fas fa-plug me-2"></i>
+                                    Kiểm tra kết nối
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-grid">
+                                <button class="btn btn-success mb-3" onclick="updateDatabase()">
+                                    <i class="fas fa-sync me-2"></i>
+                                    Cập nhật database
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-grid">
+                                <button class="btn btn-warning mb-3" onclick="createTestUser()">
+                                    <i class="fas fa-user-plus me-2"></i>
+                                    Tạo tài khoản test
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <div id="result" class="alert" style="display: none;"></div>
+                    </div>
+
+                    <div class="mt-4">
+                        <h5>📋 Hướng dẫn:</h5>
+                        <ol>
+                            <li>Nhấn "Kiểm tra kết nối" để test database</li>
+                            <li>Nhấn "Cập nhật database" để apply migrations</li>
+                            <li>Nhấn "Tạo tài khoản test" để tạo user test</li>
+                            <li>Test login với: <code>test@example.com</code> / <code>Test123!</code></li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showResult(message, isSuccess) {
+    const resultDiv = document.getElementById('result');
+    resultDiv.textContent = message;
+    resultDiv.className = `alert ${isSuccess ? 'alert-success' : 'alert-danger'}`;
+    resultDiv.style.display = 'block';
+}
+
+async function testConnection() {
+    try {
+        const response = await fetch('/Database/TestConnection', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        const data = await response.json();
+        showResult(data.message, data.success);
+    } catch (error) {
+        showResult('❌ Lỗi: ' + error.message, false);
+    }
+}
+
+async function updateDatabase() {
+    try {
+        const response = await fetch('/Database/UpdateDatabase', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        const data = await response.json();
+        showResult(data.message, data.success);
+    } catch (error) {
+        showResult('❌ Lỗi: ' + error.message, false);
+    }
+}
+
+async function createTestUser() {
+    try {
+        const response = await fetch('/Database/CreateTestUser', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        const data = await response.json();
+        showResult(data.message, data.success);
+    } catch (error) {
+        showResult('❌ Lỗi: ' + error.message, false);
+    }
+}
+</script> 

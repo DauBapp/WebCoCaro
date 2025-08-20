@@ -1,0 +1,33 @@
+﻿@model Web_chơi_cờ_Caro.Models.LoginViewModel
+@{
+    ViewData["Title"] = "Đăng nhập";
+}
+
+<h2>Đăng nhập</h2>
+
+<form asp-action="Login" method="post" class="login-form shadow p-4 rounded bg-white animate__animated animate__fadeIn">
+    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+    <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input name="email" type="email" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Mật khẩu</label>
+        <input name="password" type="password" class="form-control" />
+    </div>
+
+    <div class="mb-3 form-check">
+        <input type="checkbox" name="rememberMe" class="form-check-input" id="rememberMeLogin" />
+        <label class="form-check-label" for="rememberMeLogin">Ghi nhớ đăng nhập</label>
+    </div>
+
+    <button type="submit" class="btn btn-warning w-100 fw-bold animate__animated animate__pulse">Đăng nhập</button>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

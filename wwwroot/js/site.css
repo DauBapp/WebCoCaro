@@ -1,0 +1,28 @@
+/* Định dạng ô bàn cờ */
+.caro-board td {
+    width: 32px;
+    height: 32px;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0;
+    user-select: none;
+}
+/* Định dạng icon X */
+.caro-x {
+    color: #d9534f;
+    font-family: Arial, sans-serif;
+    font-size: 28px;
+    display: inline-block;
+    line-height: 32px;
+}
+/* Định dạng icon O */
+.caro-o {
+    color: #0275d8;
+    font-family: Arial, sans-serif;
+    font-size: 28px;
+    display: inline-block;
+    line-height: 32px;
+} 

@@ -1,0 +1,364 @@
+@model List<Web_chơi_cờ_Caro.Models.AdminUserViewModel>
+@{
+    ViewData["Title"] = "Quản lý người dùng";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-users text-primary me-2"></i>Quản lý người dùng
+                </h1>
+                <a href="@Url.Action("Index", "Admin")" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Quay lại Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Tìm kiếm</label>
+                            <input type="text" class="form-control" name="searchTerm" value="@ViewBag.SearchTerm" placeholder="Email hoặc tên người dùng...">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Trạng thái</label>
+                            <select class="form-select" name="status">
+                                <option value="all" selected="@(ViewBag.Status == "all")">Tất cả</option>
+                                <option value="pending" selected="@(ViewBag.Status == "pending")">Chờ duyệt</option>
+                                <option value="active" selected="@(ViewBag.Status == "active")">Hoạt động</option>
+                                <option value="banned" selected="@(ViewBag.Status == "banned")">Bị cấm</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">&nbsp;</label>
+                            <div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-2"></i>Tìm kiếm
+                                </button>
+                                <a href="@Url.Action("Users", "Admin")" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-2"></i>Xóa bộ lọc
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-list me-2"></i>Danh sách người dùng (@ViewBag.TotalUsers)
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Email</th>
+                                    <th>Trạng thái</th>
+                                    <th>Ngày tạo</th>
+                                    <th>Đăng nhập cuối</th>
+                                    <th>Vai trò</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var user in Model)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="fw-bold">@user.Email</div>
+                                            <small class="text-muted">@user.UserName</small>
+                                        </td>
+                                        <td>
+                                            @if (user.IsBanned)
+                                            {
+                                                <span class="badge bg-danger">Bị cấm</span>
+                                                @if (user.LockoutEnd.HasValue)
+                                                {
+                                                    <br><small class="text-muted">Đến: @user.LockoutEnd.Value.ToString("dd/MM/yyyy")</small>
+                                                }
+                                            }
+                                            else if (!user.EmailConfirmed)
+                                            {
+                                                <span class="badge bg-warning">Chờ duyệt</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success">Hoạt động</span>
+                                            }
+                                        </td>
+                                        <td>@user.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>
+                                            @if (user.LastLoginTime.HasValue)
+                                            {
+                                                @user.LastLoginTime.Value.ToString("dd/MM/yyyy HH:mm")
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Chưa đăng nhập</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @foreach (var role in user.Roles)
+                                            {
+                                                <span class="badge bg-info me-1">@role</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                @if (!user.EmailConfirmed)
+                                                {
+                                                    <button class="btn btn-success btn-sm" onclick="approveUser('@user.Id')" title="Duyệt">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                }
+                                                @if (!user.IsBanned)
+                                                {
+                                                    <button class="btn btn-warning btn-sm" onclick="showBanModal('@user.Id', '@user.Email')" title="Cấm">
+                                                        <i class="fas fa-ban"></i>
+                                                    </button>
+                                                }
+                                                else
+                                                {
+                                                    <button class="btn btn-info btn-sm" onclick="unbanUser('@user.Id')" title="Bỏ cấm">
+                                                        <i class="fas fa-unlock"></i>
+                                                    </button>
+                                                }
+                                                <button class="btn btn-danger btn-sm" onclick="deleteUser('@user.Id', '@user.Email')" title="Xóa">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    @if (ViewBag.TotalPages > 1)
+                    {
+                        <nav aria-label="Page navigation" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                                {
+                                    <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                        <a class="page-link" href="@Url.Action("Users", "Admin", new { page = i, searchTerm = ViewBag.SearchTerm, status = ViewBag.Status })">@i</a>
+                                    </li>
+                                }
+                            </ul>
+                        </nav>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ban User Modal -->
+<div class="modal fade" id="banModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cấm người dùng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="banForm">
+                    <input type="hidden" id="banUserId">
+                    <div class="mb-3">
+                        <label class="form-label">Người dùng</label>
+                        <input type="text" class="form-control" id="banUserEmail" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Lý do cấm</label>
+                        <textarea class="form-control" id="banReason" rows="3" required placeholder="Nhập lý do cấm..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Thời gian cấm (ngày)</label>
+                        <select class="form-select" id="banDays">
+                            <option value="1">1 ngày</option>
+                            <option value="3">3 ngày</option>
+                            <option value="7" selected>7 ngày</option>
+                            <option value="30">30 ngày</option>
+                            <option value="365">Vĩnh viễn</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" onclick="banUser()">Cấm người dùng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete User Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xóa người dùng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa người dùng <strong id="deleteUserEmail"></strong>?</p>
+                <p class="text-danger">Hành động này không thể hoàn tác!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDeleteUser()">Xóa người dùng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentUserId = '';
+
+function showAlert(message, type = 'success') {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.querySelector('.container-fluid').insertBefore(alertDiv, document.querySelector('.row'));
+    setTimeout(() => alertDiv.remove(), 5000);
+}
+
+function approveUser(userId) {
+    if (confirm('Bạn có chắc chắn muốn duyệt người dùng này?')) {
+        fetch('@Url.Action("ApproveUser", "Admin")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+            },
+            body: JSON.stringify({ userId: userId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert(data.message, 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showAlert(data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            showAlert('Lỗi hệ thống!', 'danger');
+        });
+    }
+}
+
+function showBanModal(userId, userEmail) {
+    currentUserId = userId;
+    document.getElementById('banUserId').value = userId;
+    document.getElementById('banUserEmail').value = userEmail;
+    new bootstrap.Modal(document.getElementById('banModal')).show();
+}
+
+function banUser() {
+    const userId = document.getElementById('banUserId').value;
+    const reason = document.getElementById('banReason').value;
+    const days = document.getElementById('banDays').value;
+
+    if (!reason.trim()) {
+        showAlert('Vui lòng nhập lý do cấm!', 'warning');
+        return;
+    }
+
+    fetch('@Url.Action("BanUser", "Admin")', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+        },
+        body: JSON.stringify({ userId: userId, reason: reason, days: parseInt(days) })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(data.message, 'success');
+            bootstrap.Modal.getInstance(document.getElementById('banModal')).hide();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showAlert(data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        showAlert('Lỗi hệ thống!', 'danger');
+    });
+}
+
+function unbanUser(userId) {
+    if (confirm('Bạn có chắc chắn muốn bỏ cấm người dùng này?')) {
+        fetch('@Url.Action("UnbanUser", "Admin")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+            },
+            body: JSON.stringify({ userId: userId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert(data.message, 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showAlert(data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            showAlert('Lỗi hệ thống!', 'danger');
+        });
+    }
+}
+
+function deleteUser(userId, userEmail) {
+    currentUserId = userId;
+    document.getElementById('deleteUserEmail').textContent = userEmail;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+
+function confirmDeleteUser() {
+    fetch('@Url.Action("DeleteUser", "Admin")', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+        },
+        body: JSON.stringify({ userId: currentUserId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(data.message, 'success');
+            bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showAlert(data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        showAlert('Lỗi hệ thống!', 'danger');
+    });
+}
+</script>

@@ -1,0 +1,369 @@
+@{
+    ViewData["Title"] = "Tìm phòng";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="text-center mb-4">
+                <h1 class="display-5 text-warning mb-3">
+                    <i class="fas fa-search me-3"></i>Tìm phòng
+                </h1>
+                <p class="lead text-muted">Tham gia phòng có sẵn hoặc tìm theo mã phòng</p>
+            </div>
+
+            <!-- Tìm theo mã phòng -->
+            <div class="card shadow-lg border-0 mb-4" style="background: linear-gradient(135deg, #fffbe6 0%, #f5d88c 100%);">
+                <div class="card-body p-4">
+                    <h5 class="mb-3">
+                        <i class="fas fa-key text-warning me-2"></i>Tham gia bằng mã phòng
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <input type="text" class="form-control form-control-lg" id="roomCodeInput" placeholder="Nhập mã phòng (VD: ABC123)" maxlength="6">
+                        </div>
+                        <div class="col-md-4">
+                            <button type="button" class="btn btn-warning btn-lg w-100" onclick="joinRoomByCode()">
+                                <i class="fas fa-sign-in-alt me-2"></i>Tham gia
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Mã phòng có sẵn để test -->
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>Mã phòng có sẵn để test: 
+                            <span class="badge bg-light text-dark me-1" style="cursor: pointer;" onclick="setRoomCode('ABC123')">ABC123</span>
+                            <span class="badge bg-light text-dark me-1" style="cursor: pointer;" onclick="setRoomCode('VY44J2')">VY44J2</span>
+                            <span class="badge bg-light text-dark me-1" style="cursor: pointer;" onclick="setRoomCode('TEST01')">TEST01</span>
+                            <span class="badge bg-light text-dark me-1" style="cursor: pointer;" onclick="setRoomCode('DEMO99')">DEMO99</span>
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Danh sách phòng -->
+            <div class="card shadow-lg border-0" style="background: linear-gradient(135deg, #fffbe6 0%, #f5d88c 100%);">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list text-warning me-2"></i>Phòng đang chờ
+                        </h5>
+                        <button type="button" class="btn btn-outline-warning btn-sm" onclick="refreshRoomList()">
+                            <i class="fas fa-sync-alt me-1"></i>Làm mới
+                        </button>
+                    </div>
+
+                    <div id="roomList">
+                        <!-- Room items will be loaded here -->
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-warning" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2 text-muted">Đang tải danh sách phòng...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nút quay lại -->
+            <div class="text-center mt-4">
+                <a href="@Url.Action("Multiplayer", "Home")" class="btn btn-outline-secondary btn-lg px-5">
+                    <i class="fas fa-arrow-left me-2"></i>Quay lại
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/signalr.min.js"></script>
+<script>
+    let connection;
+    let roomList = [];
+
+    // Initialize SignalR connection
+    async function initializeConnection() {
+        try {
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl("/gameHub")
+                .build();
+
+            // Setup event handlers
+            connection.on("RoomListUpdated", (rooms) => {
+                roomList = rooms;
+                loadRoomList();
+            });
+
+            connection.on("RoomExistsResult", (roomId, exists, playerCount, maxPlayers) => {
+                console.log(`Room ${roomId} exists: ${exists}, players: ${playerCount}/${maxPlayers}`);
+                if (exists && playerCount >= maxPlayers) {
+                    showAlert('Phòng đã đầy!', 'warning');
+                } else if (exists) {
+                    showAlert(`Phòng ${roomId} có ${playerCount}/${maxPlayers} người chơi`, 'info');
+                } else {
+                    showAlert(`Phòng ${roomId} chưa có ai, sẽ tạo mới`, 'info');
+                }
+            });
+
+            // Start connection
+            await connection.start();
+            console.log("SignalR Connected.");
+
+            // Get room list
+            await connection.invoke("GetRoomList");
+            
+        } catch (err) {
+            console.error(err);
+            // Fallback to sample data
+            loadSampleRooms();
+        }
+    }
+
+    // Sample room data (fallback)
+    const sampleRooms = [
+        {
+            id: 'ABC123',
+            name: 'Phòng chơi vui vẻ',
+            host: 'Player1',
+            players: 1,
+            maxPlayers: 2,
+            boardSize: '20x20',
+            timeLimit: '60s',
+            isPrivate: false,
+            status: 'waiting'
+        },
+        {
+            id: 'XYZ789',
+            name: 'Thách đấu cờ caro',
+            host: 'Player2',
+            players: 1,
+            maxPlayers: 2,
+            boardSize: '15x15',
+            timeLimit: '30s',
+            isPrivate: false,
+            status: 'waiting'
+        },
+        {
+            id: 'DEF456',
+            name: 'Phòng riêng tư',
+            host: 'Player3',
+            players: 1,
+            maxPlayers: 2,
+            boardSize: '25x25',
+            timeLimit: '120s',
+            isPrivate: true,
+            status: 'waiting'
+        },
+        {
+            id: 'VY44J2',
+            name: 'Phòng test demo',
+            host: 'DemoUser',
+            players: 1,
+            maxPlayers: 2,
+            boardSize: '20x20',
+            timeLimit: '60s',
+            isPrivate: false,
+            status: 'waiting'
+        },
+        {
+            id: 'TEST01',
+            name: 'Phòng thử nghiệm',
+            host: 'TestPlayer',
+            players: 1,
+            maxPlayers: 2,
+            boardSize: '15x15',
+            timeLimit: '30s',
+            isPrivate: false,
+            status: 'waiting'
+        },
+        {
+            id: 'DEMO99',
+            name: 'Phòng demo chính',
+            host: 'DemoHost',
+            players: 1,
+            maxPlayers: 4,
+            boardSize: '20x20',
+            timeLimit: '60s',
+            isPrivate: false,
+            status: 'waiting'
+        }
+    ];
+
+    function loadSampleRooms() {
+        roomList = sampleRooms;
+        loadRoomList();
+    }
+
+    function loadRoomList() {
+        const roomListElement = document.getElementById('roomList');
+        
+        if (roomList.length === 0) {
+            roomListElement.innerHTML = `
+                <div class="text-center py-4">
+                    <i class="fas fa-inbox text-muted" style="font-size: 3rem;"></i>
+                    <p class="mt-2 text-muted">Không có phòng nào đang chờ</p>
+                    <a href="@Url.Action("CreateRoom", "Home")" class="btn btn-warning">
+                        <i class="fas fa-plus me-2"></i>Tạo phòng mới
+                    </a>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '';
+        roomList.forEach(room => {
+            html += `
+                <div class="room-item card mb-3 border-0 shadow-sm" style="background: white;">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <i class="fas fa-users text-primary" style="font-size: 1.5rem;"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1">${room.roomName || room.name}</h6>
+                                        <small class="text-muted">
+                                            <i class="fas fa-user me-1"></i>Chủ phòng: ${room.hostName || room.host}
+                                            ${room.isPrivate ? '<i class="fas fa-lock text-warning ms-2"></i>' : ''}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="row text-center">
+                                    <div class="col-4">
+                                        <div class="text-primary fw-bold">${room.players}/${room.maxPlayers}</div>
+                                        <small class="text-muted">Người chơi</small>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="text-success fw-bold">20x20</div>
+                                        <small class="text-muted">Bàn cờ</small>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="text-warning fw-bold">60s</div>
+                                        <small class="text-muted">Thời gian</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 text-end">
+                                <button type="button" class="btn btn-warning btn-sm" onclick="joinRoom('${room.roomId || room.id}')">
+                                    <i class="fas fa-sign-in-alt me-1"></i>Tham gia
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        roomListElement.innerHTML = html;
+    }
+
+    function joinRoomByCode() {
+        const roomCode = document.getElementById('roomCodeInput').value.trim().toUpperCase();
+        
+        if (!roomCode) {
+            showAlert('Vui lòng nhập mã phòng!', 'warning');
+            return;
+        }
+
+        if (roomCode.length !== 6) {
+            showAlert('Mã phòng phải có 6 ký tự!', 'warning');
+            return;
+        }
+
+        // Validate room code format (only letters and numbers)
+        if (!/^[A-Z0-9]{6}$/.test(roomCode)) {
+            showAlert('Mã phòng chỉ được chứa chữ cái và số!', 'warning');
+            return;
+        }
+
+        // Check if room exists in current list
+        const existingRoom = roomList.find(r => (r.roomId || r.id) === roomCode);
+        
+        if (existingRoom) {
+            // Room exists and has players
+            if (existingRoom.players >= existingRoom.maxPlayers) {
+                showAlert('Phòng đã đầy!', 'warning');
+                return;
+            }
+            showAlert(`Đang tham gia phòng: ${existingRoom.roomName || existingRoom.name}`, 'success');
+        } else {
+            // Room doesn't exist in list, check with server
+            if (connection) {
+                connection.invoke("CheckRoomExists", roomCode);
+            }
+            showAlert('Đang kiểm tra phòng...', 'info');
+        }
+
+        // Join room (server will create room if it doesn't exist)
+        setTimeout(() => {
+            window.location.href = '@Url.Action("GameRoom", "Home")?roomId=' + roomCode;
+        }, 1500);
+    }
+
+    function joinRoom(roomId) {
+        const room = roomList.find(r => (r.roomId || r.id) === roomId);
+        if (room && room.players < room.maxPlayers) {
+            window.location.href = '@Url.Action("GameRoom", "Home")?roomId=' + roomId;
+        } else {
+            showAlert('Phòng đã đầy hoặc không tồn tại!', 'warning');
+        }
+    }
+
+    function refreshRoomList() {
+        const roomListElement = document.getElementById('roomList');
+        roomListElement.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-warning" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 text-muted">Đang làm mới danh sách...</p>
+            </div>
+        `;
+        
+        setTimeout(() => {
+            if (connection) {
+                connection.invoke("GetRoomList");
+            } else {
+                loadSampleRooms();
+            }
+            showAlert('Đã làm mới danh sách phòng!', 'success');
+        }, 1000);
+    }
+
+    function showAlert(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+        alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(alertDiv);
+        
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 3000);
+    }
+
+    function setRoomCode(code) {
+        document.getElementById('roomCodeInput').value = code;
+        showAlert(`Đã chọn mã phòng: ${code}`, 'info');
+    }
+
+    // Load room list on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(() => {
+            initializeConnection();
+        }, 500);
+    });
+
+    // Enter key to join room
+    document.getElementById('roomCodeInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            joinRoomByCode();
+        }
+    });
+</script> 

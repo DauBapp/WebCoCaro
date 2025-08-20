@@ -1,0 +1,225 @@
+@model List<Web_chơi_cờ_Caro.Data.BanRecord>
+@{
+    ViewData["Title"] = "Lịch sử cấm người dùng";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-history text-danger me-2"></i>Lịch sử cấm người dùng
+                </h1>
+                <a href="@Url.Action("Index", "Admin")" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Quay lại Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thống kê ban -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Tổng lệnh cấm
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.Count</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-ban fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Đang cấm
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.Count(b => b.IsActive)</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Đã bỏ cấm
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.Count(b => !b.IsActive)</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-unlock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Tuần này
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.Count(b => b.BannedAt >= DateTime.Now.AddDays(-7))</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-week fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bảng lịch sử -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-list me-2"></i>Lịch sử cấm (@Model.Count)
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Người dùng</th>
+                                    <th>Lý do</th>
+                                    <th>Ngày cấm</th>
+                                    <th>Ngày hết hạn</th>
+                                    <th>Người cấm</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thông tin bỏ cấm</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var record in Model)
+                                {
+                                    <tr class="@(record.IsActive ? "table-danger" : "")">
+                                        <td>
+                                            <div class="fw-bold">@record.User?.Email</div>
+                                            <small class="text-muted">@record.User?.UserName</small>
+                                        </td>
+                                        <td>
+                                            <div class="text-wrap" style="max-width: 200px;">
+                                                @record.Reason
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>@record.BannedAt.ToString("dd/MM/yyyy")</div>
+                                            <small class="text-muted">@record.BannedAt.ToString("HH:mm")</small>
+                                        </td>
+                                        <td>
+                                            @if (record.BanEndDate.Year > 2100)
+                                            {
+                                                <span class="badge bg-danger">Vĩnh viễn</span>
+                                            }
+                                            else
+                                            {
+                                                <div>@record.BanEndDate.ToString("dd/MM/yyyy")</div>
+                                                <small class="text-muted">@record.BanEndDate.ToString("HH:mm")</small>
+                                            }
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">@record.BannedBy</span>
+                                        </td>
+                                        <td>
+                                            @if (record.IsActive)
+                                            {
+                                                @if (record.BanEndDate <= DateTime.Now)
+                                                {
+                                                    <span class="badge bg-warning">Hết hạn</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-danger">Đang cấm</span>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success">Đã bỏ cấm</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (!record.IsActive && record.UnbannedBy != null)
+                                            {
+                                                <div><strong>Bởi:</strong> @record.UnbannedBy</div>
+                                                <small class="text-muted">@record.UnbannedAt?.ToString("dd/MM/yyyy HH:mm")</small>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    @if (ViewBag.TotalPages > 1)
+                    {
+                        <nav aria-label="Page navigation" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                                {
+                                    <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                        <a class="page-link" href="@Url.Action("BanHistory", "Admin", new { page = i })">@i</a>
+                                    </li>
+                                }
+                            </ul>
+                        </nav>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .border-left-primary {
+        border-left: 0.25rem solid #4e73df !important;
+    }
+    .border-left-success {
+        border-left: 0.25rem solid #1cc88a !important;
+    }
+    .border-left-info {
+        border-left: 0.25rem solid #36b9cc !important;
+    }
+    .border-left-warning {
+        border-left: 0.25rem solid #f6c23e !important;
+    }
+    .border-left-danger {
+        border-left: 0.25rem solid #e74a3b !important;
+    }
+    .text-gray-300 {
+        color: #dddfeb !important;
+    }
+    .text-gray-800 {
+        color: #5a5c69 !important;
+    }
+    .text-xs {
+        font-size: 0.7rem;
+    }
+</style>

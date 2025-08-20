@@ -1,0 +1,677 @@
+@{
+    ViewData["Title"] = "Phòng Game";
+    var roomId = ViewBag.RoomId ?? "ABC123";
+}
+
+<div class="container-fluid mt-3">
+    <div class="row">
+        <!-- Game Board -->
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0" style="background: linear-gradient(135deg, #fffbe6 0%, #f5d88c 100%);">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="mb-0">
+                            <i class="fas fa-gamepad text-warning me-2"></i>Phòng @roomId
+                        </h4>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-warning btn-sm" onclick="copyRoomLink()">
+                                <i class="fas fa-share me-1"></i>Chia sẻ
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="leaveRoom()">
+                                <i class="fas fa-sign-out-alt me-1"></i>Rời phòng
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Game Status -->
+                    <div class="alert alert-info mb-4">
+                        <div class="row text-center">
+                            <div class="col-md-4">
+                                <strong>Trạng thái:</strong> <span id="gameStatus" class="badge bg-warning">Đang chờ người chơi</span>
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Lượt đi:</strong> <span id="currentTurn" class="badge bg-primary">X</span>
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Thời gian:</strong> <span id="timeLeft" class="badge bg-success">60s</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Game Board -->
+                    <div class="text-center">
+                        <div class="caro-board-container d-inline-block">
+                            <table id="multiplayer-board" class="caro-table" style="background: #fffbe6; border-radius: 8px; overflow: hidden;">
+                                @for (int i = 0; i < 20; i++)
+                                {
+                                    <tr>
+                                        @for (int j = 0; j < 20; j++)
+                                        {
+                                            <td></td>
+                                        }
+                                    </tr>
+                                }
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Player Info -->
+            <div class="card shadow-lg border-0 mb-3" style="background: linear-gradient(135deg, #fffbe6 0%, #f5d88c 100%);">
+                <div class="card-body p-3">
+                    <h6 class="mb-3">
+                        <i class="fas fa-users text-warning me-2"></i>Người chơi
+                    </h6>
+                    <div id="playerList">
+                        <!-- Players will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat -->
+            <div class="card shadow-lg border-0 mb-3" style="background: linear-gradient(135deg, #fffbe6 0%, #f5d88c 100%);">
+                <div class="card-body p-3">
+                    <h6 class="mb-3">
+                        <i class="fas fa-comments text-warning me-2"></i>Chat
+                    </h6>
+                    <div id="chatMessages" class="chat-container mb-3" style="height: 200px; overflow-y: auto; background: white; border-radius: 8px; padding: 10px;">
+                        <div class="chat-message">
+                            <small class="text-muted">Hệ thống</small>
+                            <div class="message-content">Đang kết nối...</div>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="chatInput" placeholder="Nhập tin nhắn...">
+                        <button class="btn btn-warning" type="button" onclick="sendMessage()">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game Controls -->
+            <div class="card shadow-lg border-0" style="background: linear-gradient(135deg, #fffbe6 0%, #f5d88c 100%);">
+                <div class="card-body p-3">
+                    <h6 class="mb-3">
+                        <i class="fas fa-cog text-warning me-2"></i>Điều khiển
+                    </h6>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-success btn-sm" id="startGameBtn" onclick="startGame()">
+                            <i class="fas fa-play me-1"></i>Bắt đầu game
+                        </button>
+                        <button class="btn btn-warning btn-sm" onclick="resetGame()">
+                            <i class="fas fa-redo me-1"></i>Chơi lại
+                        </button>
+                        <button class="btn btn-info btn-sm" onclick="showGameRules()">
+                            <i class="fas fa-question-circle me-1"></i>Luật chơi
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="testConnection()">
+                            <i class="fas fa-bug me-1"></i>Test Connection
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Victory Modal -->
+<div id="victoryModal" class="victory-modal">
+    <div class="victory-content">
+        <span class="victory-icon" id="victoryIcon">🏆</span>
+        <div class="victory-title" id="victoryTitle">Chiến thắng!</div>
+        <div class="victory-message" id="victoryMessage">Chúc mừng bạn đã chiến thắng!</div>
+        <button class="victory-button" onclick="closeVictoryModal()">Tiếp tục</button>
+    </div>
+</div>
+
+<style>
+    .chat-container {
+        border: 1px solid #ddd;
+    }
+    
+    .chat-message {
+        margin-bottom: 10px;
+    }
+    
+    .message-content {
+        background: #f8f9fa;
+        padding: 5px 10px;
+        border-radius: 15px;
+        display: inline-block;
+        max-width: 80%;
+    }
+    
+    .player-item {
+        padding: 8px;
+        border-radius: 8px;
+        background: rgba(255,255,255,0.5);
+        margin-bottom: 8px;
+    }
+    
+    /* Fixed-size board with black grid (like AI board) */
+    .caro-table {
+        border-collapse: collapse;
+        table-layout: fixed;
+        width: auto;
+        margin: 0 auto;
+        background: #fffbe6;
+    }
+    .caro-table td {
+        width: 25px;
+        height: 25px;
+        text-align: center;
+        vertical-align: middle;
+        font-size: 16px;
+        cursor: pointer;
+        background: #f7e9c4;
+        border: 1px solid #000; /* black grid lines */
+        transition: background-color 0.2s ease;
+    }
+    .caro-table td:hover {
+        background-color: #e6d7a3 !important;
+    }
+    
+    .caro-x {
+        color: #d9534f;
+        font-weight: bold;
+    }
+    
+    .caro-o {
+        color: #0275d8;
+        font-weight: bold;
+    }
+
+    /* Victory Modal Styles */
+    .victory-modal {
+        display: none;
+        position: fixed;
+        z-index: 10000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(5px);
+    }
+
+    .victory-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 40px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        max-width: 400px;
+        width: 90%;
+        animation: modalSlideIn 0.4s ease-out;
+    }
+
+    .victory-icon {
+        font-size: 60px;
+        margin-bottom: 20px;
+        display: block;
+    }
+
+    .victory-title {
+        font-size: 28px;
+        font-weight: bold;
+        margin-bottom: 15px;
+        color: #333;
+    }
+
+    .victory-message {
+        font-size: 16px;
+        color: #666;
+        margin-bottom: 30px;
+        line-height: 1.5;
+    }
+
+    .victory-button {
+        background: #d4a24c;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .victory-button:hover {
+        background: #e6c07b;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(212, 162, 76, 0.4);
+    }
+
+    @@keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: translate(-50%, -60%);
+        }
+        to {
+            opacity: 1;
+            transform: translate(-50%, -50%);
+        }
+    }
+
+    .victory-modal.show {
+        display: block;
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.7/dist/browser/signalr.min.js"></script>
+<script>if (typeof signalR === 'undefined') { document.write('<script src="/js/signalr.min.js"><\\/script>'); }</script>
+<script>
+    let connection;
+    let currentPlayerInfo = null;
+    let gameState = {
+        isStarted: false,
+        currentPlayer: 'X',
+        timeLeft: 60,
+        winner: ''
+    };
+    let gameTimer;
+    const roomId = '@ViewBag.RoomId';
+    const playerName = '@(User.Identity?.Name ?? "Anonymous")' || 'Anonymous';
+    
+    console.log("Room ID:", roomId);
+    console.log("Player Name:", playerName);
+
+    // Initialize SignalR connection
+    async function initializeConnection() {
+        try {
+            console.log("=== INITIALIZING SIGNALR CONNECTION ===");
+            console.log("SignalR object available:", typeof signalR !== 'undefined');
+            
+            if (typeof signalR === 'undefined') {
+                throw new Error('SignalR library not loaded!');
+            }
+            
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl("/gameHub")
+                .build();
+
+            console.log("HubConnection created");
+
+            // Setup event handlers
+            setupEventHandlers();
+            console.log("Event handlers setup completed");
+
+            // Start connection
+            console.log("Starting connection...");
+            await connection.start();
+            console.log("SignalR Connected successfully");
+
+            // Join room
+            console.log("Joining room:", roomId);
+            await connection.invoke("JoinRoom", roomId, playerName);
+            console.log("JoinRoom invoked successfully");
+            
+            addChatMessage('Hệ thống', 'Đã kết nối thành công!');
+            
+            // Test connection for debugging
+            console.log("Testing connection...");
+            await connection.invoke("TestConnection", roomId);
+            console.log("TestConnection invoked successfully");
+
+        } catch (err) {
+            console.error("=== CONNECTION ERROR ===");
+            console.error("Error details:", err);
+            console.error("Error message:", err.message);
+            console.error("Error stack:", err.stack);
+            addChatMessage('Hệ thống', 'Lỗi kết nối: ' + err.toString());
+            showAlert('Lỗi kết nối: ' + err.message, 'danger');
+        }
+    }
+
+    function setupEventHandlers() {
+        // Room events
+        connection.on("RoomJoined", (roomId, roomName, players, gameState) => {
+            console.log("=== ROOM JOINED ===");
+            console.log("Room ID:", roomId);
+            console.log("Room Name:", roomName);
+            console.log("Players:", players);
+            console.log("Current player name:", playerName);
+            console.log("Game State:", gameState);
+            
+            // Find current player
+            currentPlayerInfo = players.find(p => p.name === playerName);
+            if (currentPlayerInfo) {
+                console.log("Current player is host:", currentPlayerInfo.isHost);
+                console.log("Current player symbol:", currentPlayerInfo.symbol);
+            } else {
+                console.log("WARNING: Current player not found in players list!");
+            }
+            
+            updatePlayerList(players);
+            updateGameState(gameState);
+        });
+
+        connection.on("PlayerJoined", (playerName, symbol, playerCount) => {
+            console.log("Player joined:", playerName, symbol, playerCount);
+            addChatMessage('Hệ thống', `${playerName} đã tham gia phòng`);
+            updatePlayerCount(playerCount);
+        });
+
+        connection.on("PlayerListUpdated", (players) => {
+            console.log("Player list updated:", players);
+            updatePlayerList(players);
+        });
+
+        connection.on("PlayerLeft", (playerName, playerCount) => {
+            console.log("Player left:", playerName, playerCount);
+            addChatMessage('Hệ thống', `${playerName} đã rời phòng`);
+            updatePlayerCount(playerCount);
+        });
+
+        // PlayerListUpdated event handler is already added above for both join and leave cases
+
+        connection.on("RoomFull", (roomId) => {
+            console.log("Room is full:", roomId);
+            showAlert('Phòng đã đầy!', 'warning');
+        });
+
+        connection.on("GameStarted", (gameState) => {
+            console.log("=== GAME STARTED ===");
+            console.log("Game State:", gameState);
+            updateGameState(gameState);
+            addChatMessage('Hệ thống', 'Game đã bắt đầu!');
+            startTimer();
+        });
+
+        connection.on("MoveMade", (row, col, symbol, gameState) => {
+            console.log("Move made:", row, col, symbol);
+            makeMoveOnBoard(row, col, symbol);
+            updateGameState(gameState);
+            startTimer();
+        });
+
+        connection.on("GameEnded", (winner, gameState) => {
+            console.log("Game ended:", winner);
+            updateGameState(gameState);
+            stopTimer();
+            
+            if (winner === "Draw") {
+                showVictoryModal("Hòa!", "Cả hai người chơi đều xuất sắc!", "🤝");
+            } else {
+                showVictoryModal("Chiến thắng!", `Người chơi ${winner} đã chiến thắng!`, "🏆");
+            }
+        });
+
+        connection.on("GameReset", (gameState) => {
+            console.log("Game reset:", gameState);
+            updateGameState(gameState);
+            resetBoard();
+            stopTimer();
+            addChatMessage('Hệ thống', 'Game đã được reset!');
+        });
+
+        connection.on("MessageReceived", (sender, message) => {
+            addChatMessage(sender, message);
+        });
+
+        connection.on("TestConnectionResult", (connectionId, roomId, playerName, isHost) => {
+            console.log("TestConnectionResult:", connectionId, roomId, playerName, isHost);
+            addChatMessage('Hệ thống', `Test: ${playerName}, Host: ${isHost}`);
+        });
+
+        // Add error handling
+        connection.on("Error", (message) => {
+            console.error("Server error:", message);
+            showAlert(message, 'danger');
+        });
+    }
+
+    function updatePlayerList(players) {
+        const playerList = document.getElementById('playerList');
+        let html = '';
+        
+        players.forEach(player => {
+            html += `
+                <div class="player-item d-flex align-items-center">
+                    <div class="player-avatar me-2">
+                        <i class="fas fa-user-circle ${player.isHost ? 'text-primary' : 'text-secondary'}" style="font-size: 1.5rem;"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="fw-bold">${player.name}</div>
+                        <small class="text-muted">${player.isHost ? 'Chủ phòng' : 'Người chơi'}</small>
+                    </div>
+                    <div class="badge ${player.symbol === 'X' ? 'bg-warning' : 'bg-primary'}">${player.symbol}</div>
+                </div>
+            `;
+        });
+        
+        playerList.innerHTML = html;
+    }
+
+    function updateGameState(newGameState) {
+        gameState = newGameState;
+        
+        document.getElementById('gameStatus').textContent = gameState.isStarted ? 'Đang chơi' : 'Đang chờ người chơi';
+        document.getElementById('gameStatus').className = gameState.isStarted ? 'badge bg-success' : 'badge bg-warning';
+        
+        document.getElementById('currentTurn').textContent = gameState.currentPlayer;
+        document.getElementById('currentTurn').className = gameState.currentPlayer === 'X' ? 'badge bg-warning' : 'badge bg-primary';
+        
+        document.getElementById('timeLeft').textContent = gameState.timeLeft + 's';
+        
+        // Update start button
+        const startBtn = document.getElementById('startGameBtn');
+        if (gameState.isStarted) {
+            startBtn.innerHTML = '<i class="fas fa-pause me-1"></i>Tạm dừng';
+            startBtn.className = 'btn btn-warning btn-sm';
+        } else {
+            startBtn.innerHTML = '<i class="fas fa-play me-1"></i>Bắt đầu game';
+            startBtn.className = 'btn btn-success btn-sm';
+        }
+    }
+
+    function updatePlayerCount(count) {
+        // Update player count display if needed
+    }
+
+    function makeMoveOnBoard(row, col, symbol) {
+        const cell = document.querySelector(`#multiplayer-board tr:nth-child(${row + 1}) td:nth-child(${col + 1})`);
+        if (cell && cell.textContent === '') {
+            cell.innerHTML = `<span class="caro-${symbol.toLowerCase()}">${symbol}</span>`;
+        }
+    }
+
+    function resetBoard() {
+        const cells = document.querySelectorAll('#multiplayer-board td');
+        cells.forEach(cell => {
+            cell.innerHTML = '';
+        });
+    }
+
+    function startTimer() {
+        clearInterval(gameTimer);
+        gameTimer = setInterval(() => {
+            if (gameState.timeLeft > 0) {
+                gameState.timeLeft--;
+                document.getElementById('timeLeft').textContent = gameState.timeLeft + 's';
+            } else {
+                clearInterval(gameTimer);
+                // Auto switch turn
+                if (connection) {
+                    connection.invoke("MakeMove", roomId, -1, -1); // Invalid move to switch turn
+                }
+            }
+        }, 1000);
+    }
+
+    function stopTimer() {
+        clearInterval(gameTimer);
+    }
+
+    // Game board click handler
+    document.addEventListener('DOMContentLoaded', function() {
+        const board = document.getElementById('multiplayer-board');
+        if (board) {
+            board.addEventListener('click', function(e) {
+                if (e.target.tagName === 'TD' && e.target.textContent === '' && gameState.isStarted && !gameState.winner) {
+                    const row = e.target.parentNode.rowIndex;
+                    const col = e.target.cellIndex;
+                    
+                    console.log("Board clicked:", row, col);
+                    console.log("Current player:", currentPlayerInfo?.symbol);
+                    console.log("Game state:", gameState);
+                    
+                    if (connection && connection.state === 'Connected') {
+                        console.log("Making move...");
+                        connection.invoke("MakeMove", roomId, row, col)
+                            .then(() => {
+                                console.log("Move made successfully");
+                            })
+                            .catch(error => {
+                                console.error("Error making move:", error);
+                                showAlert('Lỗi khi thực hiện nước đi: ' + error.message, 'danger');
+                            });
+                    } else {
+                        console.error("Connection not available or not connected");
+                        showAlert('Chưa kết nối với server!', 'warning');
+                    }
+                } else {
+                    console.log("Click ignored - conditions not met");
+                    console.log("Tag:", e.target.tagName);
+                    console.log("Content:", e.target.textContent);
+                    console.log("Game started:", gameState.isStarted);
+                    console.log("Winner:", gameState.winner);
+                }
+            });
+        } else {
+            console.error("ERROR: Board not found!");
+        }
+
+        // Initialize connection
+        initializeConnection();
+    });
+
+    // Game control functions
+    async function startGame() {
+        if (connection && connection.state === 'Connected') {
+            try {
+                console.log("=== STARTING GAME ===");
+                console.log("Room ID:", roomId);
+                console.log("Current Player Info:", currentPlayerInfo);
+                console.log("Is Host:", currentPlayerInfo?.isHost);
+                
+                await connection.invoke("StartGame", roomId);
+                console.log("StartGame invoked successfully");
+            } catch (error) {
+                console.error("Error starting game:", error);
+                showAlert('Lỗi khi bắt đầu game: ' + error.message, 'danger');
+            }
+        } else {
+            console.error("Connection not available or not connected");
+            showAlert('Chưa kết nối với server!', 'danger');
+        }
+    }
+
+    async function resetGame() {
+        if (connection) {
+            await connection.invoke("ResetGame", roomId);
+        }
+    }
+
+    async function sendMessage() {
+        const input = document.getElementById('chatInput');
+        const message = input.value.trim();
+        
+        if (message && connection) {
+            await connection.invoke("SendMessage", roomId, message);
+            input.value = '';
+        }
+    }
+
+    function addChatMessage(sender, message) {
+        const chatContainer = document.getElementById('chatMessages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'chat-message';
+        messageDiv.innerHTML = `
+            <small class="text-muted">${sender}</small>
+            <div class="message-content">${message}</div>
+        `;
+        
+        chatContainer.appendChild(messageDiv);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    function copyRoomLink() {
+        const roomLink = window.location.href;
+        navigator.clipboard.writeText(roomLink).then(function() {
+            showAlert('Đã sao chép link phòng!', 'success');
+        });
+    }
+
+    async function leaveRoom() {
+        if (confirm('Bạn có chắc muốn rời phòng?')) {
+            if (connection) {
+                await connection.invoke("LeaveRoom", roomId);
+            }
+            window.location.href = '@Url.Action("Multiplayer", "Home")';
+        }
+    }
+
+    function showGameRules() {
+        alert('Luật chơi Cờ Caro:\n\n- Đặt 5 quân cờ liên tiếp để thắng\n- Có thể đánh ngang, dọc hoặc chéo\n- Mỗi lượt có 60 giây\n- Người chơi X đi trước');
+    }
+
+    function showVictoryModal(title, message, icon) {
+        document.getElementById('victoryTitle').textContent = title;
+        document.getElementById('victoryMessage').textContent = message;
+        document.getElementById('victoryIcon').textContent = icon;
+        document.getElementById('victoryModal').classList.add('show');
+    }
+
+    function closeVictoryModal() {
+        document.getElementById('victoryModal').classList.remove('show');
+    }
+
+    function showAlert(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+        alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(alertDiv);
+        
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 3000);
+    }
+
+    // Enter key to send message
+    document.getElementById('chatInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+
+    async function testConnection() {
+        if (connection) {
+            try {
+                console.log("Testing SignalR connection...");
+                await connection.invoke("TestConnection", roomId);
+                console.log("TestConnection invoked successfully.");
+                showAlert("Test Connection successful!", "success");
+            } catch (error) {
+                console.error("Error testing SignalR connection:", error);
+                showAlert("Test Connection failed: " + error.toString(), "danger");
+            }
+        } else {
+            showAlert("SignalR connection not initialized.", "warning");
+        }
+    }
+</script> 

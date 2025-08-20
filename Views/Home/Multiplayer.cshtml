@@ -1,0 +1,154 @@
+@{
+    ViewData["Title"] = "Chơi Online";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="text-center mb-5">
+                <h1 class="display-4 text-warning mb-3">
+                    <i class="fas fa-users me-3"></i>Chơi Online
+                </h1>
+                <p class="lead text-muted">Thách đấu với người chơi khác trên toàn thế giới!</p>
+            </div>
+
+            <div class="row">
+                <!-- Tạo phòng -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 shadow-lg border-0" style="background: linear-gradient(135deg, #fffbe6 0%, #f5d88c 100%);">
+                        <div class="card-body text-center p-5">
+                            <div class="mb-4">
+                                <i class="fas fa-plus-circle text-warning" style="font-size: 4rem;"></i>
+                            </div>
+                            <h3 class="card-title mb-3">Tạo phòng mới</h3>
+                            <p class="card-text text-muted mb-4">
+                                Tạo phòng riêng và mời bạn bè tham gia. Bạn sẽ là chủ phòng và có thể quản lý trận đấu.
+                            </p>
+                            <a href="@Url.Action("CreateRoom", "Home")" class="btn btn-warning btn-lg px-4">
+                                <i class="fas fa-plus me-2"></i>Tạo phòng
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tìm phòng -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 shadow-lg border-0" style="background: linear-gradient(135deg, #fffbe6 0%, #f5d88c 100%);">
+                        <div class="card-body text-center p-5">
+                            <div class="mb-4">
+                                <i class="fas fa-search text-warning" style="font-size: 4rem;"></i>
+                            </div>
+                            <h3 class="card-title mb-3">Tìm phòng</h3>
+                            <p class="card-text text-muted mb-4">
+                                Tìm và tham gia phòng có sẵn. Chơi với người lạ hoặc bạn bè đã tạo phòng.
+                            </p>
+                            <a href="@Url.Action("FindRoom", "Home")" class="btn btn-warning btn-lg px-4">
+                                <i class="fas fa-search me-2"></i>Tìm phòng
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thống kê -->
+            <div class="row mt-5">
+                <div class="col-12">
+                    <div class="card shadow border-0" style="background: #fffbe6;">
+                        <div class="card-body text-center p-4">
+                            <h4 class="mb-3">
+                                <i class="fas fa-chart-bar text-warning me-2"></i>Thống kê Online
+                            </h4>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="stat-item">
+                                        <div class="stat-number text-success" id="onlinePlayers">0</div>
+                                        <div class="stat-label">Người chơi online</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="stat-item">
+                                        <div class="stat-number text-primary" id="activeRooms">0</div>
+                                        <div class="stat-label">Phòng đang chơi</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="stat-item">
+                                        <div class="stat-number text-warning" id="totalGames">0</div>
+                                        <div class="stat-label">Trận đã chơi</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hướng dẫn -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card shadow border-0" style="background: #fffbe6;">
+                        <div class="card-body p-4">
+                            <h5 class="mb-3">
+                                <i class="fas fa-info-circle text-warning me-2"></i>Hướng dẫn chơi Online
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Tạo phòng và chia sẻ mã phòng</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Tìm phòng theo mã hoặc danh sách</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Chat real-time trong game</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Xem thống kê chiến thắng</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Lưu lịch sử trận đấu</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Báo cáo người chơi gian lận</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .stat-item {
+        padding: 15px;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        color: #666;
+    }
+    
+    .card {
+        transition: transform 0.3s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+    }
+</style>
+
+<script>
+    // Simulate online statistics
+    function updateStats() {
+        document.getElementById('onlinePlayers').textContent = Math.floor(Math.random() * 50) + 10;
+        document.getElementById('activeRooms').textContent = Math.floor(Math.random() * 20) + 5;
+        document.getElementById('totalGames').textContent = Math.floor(Math.random() * 1000) + 500;
+    }
+    
+    // Update stats every 30 seconds
+    updateStats();
+    setInterval(updateStats, 30000);
+</script> 
